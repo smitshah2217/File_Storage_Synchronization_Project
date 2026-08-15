@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: cloudstorage
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/cloudstorage}
+    username: ${SPRING_DATASOURCE_USERNAME:cloudstorage}
+    password: ${SPRING_DATASOURCE_PASSWORD:cloudstorage_pass}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+jwt:
+  secret: ${JWT_SECRET:this_is_a_development_jwt_secret_which_is_very_long_for_hs256}
+  expiration-ms: 86400000 # 24 hours
+
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket-name: ${MINIO_BUCKET_NAME:cloud-storage-files}
