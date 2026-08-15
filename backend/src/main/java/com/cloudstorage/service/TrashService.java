@@ -118,4 +118,27 @@ public class TrashService {
 
         folderRepository.delete(folder);
     }
+
+    @Transactional
+    public void permanentlyDeleteOlderThan(java.time.Instant threshold) {
+        // Find old trashed files and permanently delete them
+        List<FileEntity> oldFiles = fileRepository.findByDeletedTrueAndDeletedAtBefore(threshold);
+        for (FileEntity file : oldFiles) {
+            User owner = userRepository.findByIdWithPessimisticWriteLock(file.getOwner().getId()).orElseThrow();
+            List<FileVersion> versions = fileVersionRepository.findByFileIdOrderByVersionNumberDesc(file.getId());
+            for (FileVersion version : versions) {
+                minioService.deleteFile(version.getMinioObjectKey());
+                owner.setStorageUsedBytes(Math.max(0, owner.getStorageUsedBytes() - version.getSizeBytes()));
+            }
+            userRepository.save(owner);
+            fileRepository.delete(file);
+        }
+
+        // Find old trashed folders and permanently delete them
+        List<Folder> oldFolders = folderRepository.findByDeletedTrueAndDeletedAtBefore(threshold);
+        for (Folder folder : oldFolders) {
+            // Re-fetch to check if already deleted (e.g. by a parent)
+            folderRepository.findById(folder.getId()).ifPresent(this::recursivePermanentDeleteFolder);
+        }
+    }
 }

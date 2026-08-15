@@ -17,4 +17,6 @@ public interface FileEntityRepository extends JpaRepository<FileEntity, Long> {
     List<FileEntity> searchByName(@Param("ownerId") Long ownerId, @Param("query") String query);
 
     long countByOwnerIdAndDeletedFalse(Long ownerId);
+
+    List<FileEntity> findByDeletedTrueAndDeletedAtBefore(java.time.Instant threshold);
 }

@@ -14,8 +14,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
-
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import com.cloudstorage.dto.response.FileVersionDto;
+import org.springframework.scheduling.annotation.Async;
 @Service
 @RequiredArgsConstructor
 public class FileService {
@@ -42,8 +47,11 @@ public class FileService {
 
     @Transactional
     public FileDto uploadFile(MultipartFile file, Long folderId) {
-        Long userId = currentUserProvider.getCurrentUserId();
-        
+        return uploadFileWithUser(currentUserProvider.getCurrentUserId(), file, folderId);
+    }
+
+    @Transactional
+    public FileDto uploadFileWithUser(Long userId, MultipartFile file, Long folderId) {
         User owner = userRepository.findByIdWithPessimisticWriteLock(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
                 
@@ -265,5 +273,162 @@ public class FileService {
         userRepository.save(owner);
         
         fileRepository.delete(file);
+    }
+
+    @Transactional
+    public FileDto uploadNewVersion(Long fileId, MultipartFile file) {
+        Long userId = currentUserProvider.getCurrentUserId();
+        User owner = userRepository.findByIdWithPessimisticWriteLock(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        FileEntity fileEntity = fileRepository.findById(fileId)
+                .orElseThrow(() -> new ResourceNotFoundException("File not found"));
+
+        if (!fileEntity.getOwner().getId().equals(userId)) {
+            throw new ForbiddenOperationException("Only the file owner can upload new versions");
+        }
+        
+        if (fileEntity.isDeleted()) {
+            throw new ForbiddenOperationException("Cannot upload a new version to a deleted file");
+        }
+
+        long sizeDifference = file.getSize() - fileEntity.getSizeBytes();
+        if (sizeDifference > 0 && owner.getStorageUsedBytes() + sizeDifference > owner.getStorageLimitBytes()) {
+            throw new StorageLimitExceededException("Storage quota exceeded");
+        }
+
+        String objectKey = UUID.randomUUID().toString();
+        try { minioService.uploadFile(objectKey, file.getInputStream(), file.getSize(), file.getContentType()); }
+        catch (Exception e) { throw new RuntimeException("Failed to upload file to MinIO", e); }
+
+        int nextVersion = fileEntity.getCurrentVersion() != null ? fileEntity.getCurrentVersion().getVersionNumber() + 1 : 1;
+
+        FileVersion fileVersion = new FileVersion();
+        fileVersion.setFile(fileEntity);
+        fileVersion.setVersionNumber(nextVersion);
+        fileVersion.setMinioObjectKey(objectKey);
+        fileVersion.setSizeBytes(file.getSize());
+        fileVersion.setUploadedBy(owner);
+
+        FileVersion savedVersion = fileVersionRepository.save(fileVersion);
+
+        fileEntity.setCurrentVersion(savedVersion);
+        fileEntity.setSizeBytes(file.getSize());
+        fileEntity.setMimeType(file.getContentType());
+        fileRepository.save(fileEntity);
+
+        if (sizeDifference != 0) {
+            owner.setStorageUsedBytes(owner.getStorageUsedBytes() + sizeDifference);
+            userRepository.save(owner);
+        }
+
+        return mapToFileDto(fileEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FileVersionDto> getFileVersions(Long fileId) {
+        FileEntity file = getFileEntity(fileId);
+        return fileVersionRepository.findByFileIdOrderByVersionNumberDesc(fileId).stream()
+                .map(v -> FileVersionDto.builder()
+                        .id(v.getId())
+                        .fileId(v.getFile().getId())
+                        .versionNumber(v.getVersionNumber())
+                        .sizeBytes(v.getSizeBytes())
+                        .uploadedById(v.getUploadedBy().getId())
+                        .uploadedByUsername(v.getUploadedBy().getUsername())
+                        .uploadedAt(v.getUploadedAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public InputStream downloadFileVersion(Long fileId, Integer versionNumber) {
+        FileEntity file = getFileEntity(fileId);
+        FileVersion version = fileVersionRepository.findByFileIdOrderByVersionNumberDesc(fileId).stream()
+                .filter(v -> v.getVersionNumber().equals(versionNumber))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Version not found"));
+
+        return minioService.downloadFile(version.getMinioObjectKey());
+    }
+
+    @Transactional(readOnly = true)
+    public InputStream previewFileVersion(Long fileId, Integer versionNumber) {
+        FileEntity file = getFileEntity(fileId);
+        if (file.getMimeType() == null || (!file.getMimeType().startsWith("image/") && !file.getMimeType().equals("application/pdf"))) {
+            throw new UnsupportedMediaTypeException("Unsupported media type for preview");
+        }
+
+        FileVersion version = fileVersionRepository.findByFileIdOrderByVersionNumberDesc(fileId).stream()
+                .filter(v -> v.getVersionNumber().equals(versionNumber))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Version not found"));
+
+        return minioService.downloadFile(version.getMinioObjectKey());
+    }
+
+    @Transactional
+    public FileDto restoreFileVersion(Long fileId, Integer versionNumber) {
+        Long userId = currentUserProvider.getCurrentUserId();
+        User owner = userRepository.findByIdWithPessimisticWriteLock(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        FileEntity fileEntity = fileRepository.findById(fileId)
+                .orElseThrow(() -> new ResourceNotFoundException("File not found"));
+
+        if (!fileEntity.getOwner().getId().equals(userId)) {
+            throw new ForbiddenOperationException("Only the file owner can restore versions");
+        }
+
+        if (fileEntity.isDeleted()) {
+            throw new ForbiddenOperationException("Cannot restore version of a deleted file");
+        }
+
+        FileVersion versionToRestore = fileVersionRepository.findByFileIdOrderByVersionNumberDesc(fileId).stream()
+                .filter(v -> v.getVersionNumber().equals(versionNumber))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Version not found"));
+
+        long sizeDifference = versionToRestore.getSizeBytes() - fileEntity.getSizeBytes();
+        if (sizeDifference > 0 && owner.getStorageUsedBytes() + sizeDifference > owner.getStorageLimitBytes()) {
+            throw new StorageLimitExceededException("Storage quota exceeded");
+        }
+
+        // We create a new version record that copies the old version's object key
+        int nextVersion = fileEntity.getCurrentVersion() != null ? fileEntity.getCurrentVersion().getVersionNumber() + 1 : 1;
+
+        FileVersion newVersion = new FileVersion();
+        newVersion.setFile(fileEntity);
+        newVersion.setVersionNumber(nextVersion);
+        newVersion.setMinioObjectKey(versionToRestore.getMinioObjectKey());
+        newVersion.setSizeBytes(versionToRestore.getSizeBytes());
+        newVersion.setUploadedBy(owner);
+
+        FileVersion savedVersion = fileVersionRepository.save(newVersion);
+
+        fileEntity.setCurrentVersion(savedVersion);
+        fileEntity.setSizeBytes(versionToRestore.getSizeBytes());
+        fileRepository.save(fileEntity);
+
+        if (sizeDifference != 0) {
+            owner.setStorageUsedBytes(owner.getStorageUsedBytes() + sizeDifference);
+            userRepository.save(owner);
+        }
+
+        return mapToFileDto(fileEntity);
+    }
+
+    @Async
+    public CompletableFuture<List<FileDto>> uploadFilesAsync(Long userId, List<MultipartFile> files, Long folderId) {
+        List<FileDto> uploadedFiles = new ArrayList<>();
+        for (MultipartFile file : files) {
+            try {
+                uploadedFiles.add(uploadFileWithUser(userId, file, folderId));
+            } catch (Exception e) {
+                // In a real app we might return a status object with successes/failures
+                e.printStackTrace();
+            }
+        }
+        return CompletableFuture.completedFuture(uploadedFiles);
     }
 }

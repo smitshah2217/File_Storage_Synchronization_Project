@@ -19,4 +19,6 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     List<Folder> searchByName(@Param("ownerId") Long ownerId, @Param("query") String query);
 
     long countByOwnerIdAndDeletedFalse(Long ownerId);
+
+    List<Folder> findByDeletedTrueAndDeletedAtBefore(java.time.Instant threshold);
 }
