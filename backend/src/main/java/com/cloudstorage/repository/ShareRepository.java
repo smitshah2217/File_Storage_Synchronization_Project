@@ -1,3 +1,5 @@
+package com.cloudstorage.repository;
+
 import com.cloudstorage.entity.Share;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
