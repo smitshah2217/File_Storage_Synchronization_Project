@@ -37,3 +37,32 @@ export interface StorageUsageDto {
   storageUsedBytes: number;
   storageLimitBytes: number;
 }
+
+export interface ShareDto {
+  id: number;
+  fileId: number;
+  fileName: string;
+  sharedByUserId: number;
+  sharedByUsername: string;
+  sharedWithUserId: number | null;
+  sharedWithUsername: string | null;
+  isPublic: boolean;
+  expiresAt: string | null;
+  createdAt: string;
+}
+
+export interface FileVersionDto {
+  id: number;
+  fileId: number;
+  versionNumber: number;
+  sizeBytes: number;
+  createdAt: string;
+}
+
+export interface DownloadHistoryDto {
+  id: number;
+  fileId: number;
+  fileName: string;
+  downloadedAt: string;
+  ipAddress: string;
+}

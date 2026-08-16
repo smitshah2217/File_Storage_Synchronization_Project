@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, Loader2, Download } from 'lucide-react';
-import { FileDto } from '../../types';
+import type {  FileDto  } from '../../types';
 import { fileApi } from '../../api/fileApi';
 
 interface PreviewModalProps {
@@ -15,14 +15,18 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ file, onClose }) => {
 
   useEffect(() => {
     let cancelled = false;
+    let localUrl: string | null = null;
     setLoading(true);
     setError('');
 
     fileApi.getPreviewUrl(file.id)
       .then((url) => {
         if (!cancelled) {
+          localUrl = url;
           setPreviewUrl(url);
           setLoading(false);
+        } else {
+          window.URL.revokeObjectURL(url);
         }
       })
       .catch(() => {
@@ -34,7 +38,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ file, onClose }) => {
 
     return () => {
       cancelled = true;
-      if (previewUrl) window.URL.revokeObjectURL(previewUrl);
+      if (localUrl) window.URL.revokeObjectURL(localUrl);
     };
   }, [file.id]);
 

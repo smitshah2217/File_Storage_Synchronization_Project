@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Folder as FolderIcon, MoreVertical, Edit2, Trash2, FolderOutput } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { FolderDto } from '../../types';
+import type {  FolderDto  } from '../../types';
 
 interface FolderCardProps {
   folder: FolderDto;

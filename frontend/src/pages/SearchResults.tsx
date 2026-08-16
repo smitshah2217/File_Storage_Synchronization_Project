@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import {  useEffect, useState  } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Search as SearchIcon, Loader2, FolderOpen, File as FileIcon } from 'lucide-react';
 import { searchApi } from '../api/searchApi';
-import { FileDto, FolderDto } from '../types';
+import type {  FileDto, FolderDto  } from '../types';
 
 const formatBytes = (bytes: number) => {
   if (bytes === 0) return '0 B';

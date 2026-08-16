@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance';
-import { FolderContentDto, FolderDto } from '../types';
+import type {  FolderContentDto, FolderDto  } from '../types';
 
 export const folderApi = {
   getRootContents: async (): Promise<FolderContentDto> => {

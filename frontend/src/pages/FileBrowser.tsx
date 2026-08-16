@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Upload, FolderPlus, Loader2, FolderOpen } from 'lucide-react';
-import { FolderDto, FileDto, FolderContentDto } from '../types';
+import type {  FolderDto, FileDto, FolderContentDto  } from '../types';
 import { folderApi } from '../api/folderApi';
 import { fileApi } from '../api/fileApi';
 import BreadcrumbNav from '../components/files/BreadcrumbNav';
@@ -9,6 +9,9 @@ import FolderCard from '../components/files/FolderCard';
 import FileCard from '../components/files/FileCard';
 import PreviewModal from '../components/files/PreviewModal';
 import RenameModal from '../components/files/RenameModal';
+import ShareModal from '../components/files/ShareModal';
+import VersionHistoryModal from '../components/files/VersionHistoryModal';
+import MovePickerModal from '../components/files/MovePickerModal';
 
 const FileBrowser = () => {
   const { folderId } = useParams<{ folderId: string }>();
@@ -24,6 +27,9 @@ const FileBrowser = () => {
   const [previewFile, setPreviewFile] = useState<FileDto | null>(null);
   const [renameTarget, setRenameTarget] = useState<{ type: 'file' | 'folder'; item: FileDto | FolderDto } | null>(null);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [shareFile, setShareFile] = useState<FileDto | null>(null);
+  const [historyFile, setHistoryFile] = useState<FileDto | null>(null);
+  const [moveTarget, setMoveTarget] = useState<{ type: 'file' | 'folder'; item: FileDto | FolderDto } | null>(null);
 
   const fetchContents = useCallback(async () => {
     setLoading(true);
@@ -92,6 +98,16 @@ const FileBrowser = () => {
   const handleDeleteFolder = async (folder: FolderDto) => {
     if (!window.confirm(`Move "${folder.name}" to Trash?`)) return;
     await folderApi.deleteFolder(folder.id);
+    await fetchContents();
+  };
+
+  const handleMoveItem = async (destinationFolderId: number | null) => {
+    if (!moveTarget) return;
+    if (moveTarget.type === 'folder') {
+      await folderApi.updateFolder(moveTarget.item.id, destinationFolderId === null ? { moveToRoot: true } : { parentFolderId: destinationFolderId });
+    } else {
+      await fileApi.updateFile(moveTarget.item.id, destinationFolderId === null ? { moveToRoot: true } : { folderId: destinationFolderId });
+    }
     await fetchContents();
   };
 
@@ -175,7 +191,7 @@ const FileBrowser = () => {
                     key={folder.id}
                     folder={folder}
                     onRename={(f) => setRenameTarget({ type: 'folder', item: f })}
-                    onMove={() => alert('Move feature coming in Phase 17')}
+                    onMove={(f) => setMoveTarget({ type: 'folder', item: f })}
                     onDelete={handleDeleteFolder}
                   />
                 ))}
@@ -193,9 +209,11 @@ const FileBrowser = () => {
                     key={file.id}
                     file={file}
                     onRename={(f) => setRenameTarget({ type: 'file', item: f })}
-                    onMove={() => alert('Move feature coming in Phase 17')}
+                    onMove={(f) => setMoveTarget({ type: 'file', item: f })}
                     onDelete={handleDeleteFile}
                     onPreview={(f) => setPreviewFile(f)}
+                    onShare={(f) => setShareFile(f)}
+                    onHistory={(f) => setHistoryFile(f)}
                   />
                 ))}
               </div>
@@ -240,6 +258,23 @@ const FileBrowser = () => {
             }
           }}
           onClose={() => setRenameTarget(null)}
+        />
+      )}
+
+      {shareFile && (
+        <ShareModal file={shareFile} onClose={() => setShareFile(null)} />
+      )}
+
+      {historyFile && (
+        <VersionHistoryModal file={historyFile} onClose={() => setHistoryFile(null)} onVersionRestored={fetchContents} />
+      )}
+
+      {moveTarget && (
+        <MovePickerModal
+          itemName={moveTarget.item.name}
+          currentFolderId={moveTarget.type === 'folder' ? (moveTarget.item as FolderDto).parentFolderId : (moveTarget.item as FileDto).folderId}
+          onMove={handleMoveItem}
+          onClose={() => setMoveTarget(null)}
         />
       )}
     </div>

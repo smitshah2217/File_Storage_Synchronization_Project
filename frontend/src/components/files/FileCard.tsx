@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { File as FileIcon, FileText, FileImage, FileCode, Archive, MoreVertical, Edit2, Trash2, FolderOutput, Download, Eye } from 'lucide-react';
-import { FileDto } from '../../types';
+import { File as FileIcon, FileText, FileImage, FileCode, Archive, MoreVertical, Edit2, Trash2, FolderOutput, Download, Eye, Users, History } from 'lucide-react';
+import type {  FileDto  } from '../../types';
 import { fileApi } from '../../api/fileApi';
 
 interface FileCardProps {
@@ -9,6 +9,8 @@ interface FileCardProps {
   onMove: (file: FileDto) => void;
   onDelete: (file: FileDto) => void;
   onPreview: (file: FileDto) => void;
+  onShare: (file: FileDto) => void;
+  onHistory: (file: FileDto) => void;
 }
 
 const getFileIcon = (mimeType: string) => {
@@ -27,7 +29,7 @@ const formatBytes = (bytes: number) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-const FileCard: React.FC<FileCardProps> = ({ file, onRename, onMove, onDelete, onPreview }) => {
+const FileCard: React.FC<FileCardProps> = ({ file, onRename, onMove, onDelete, onPreview, onShare, onHistory }) => {
   const [showMenu, setShowMenu] = useState(false);
 
   const handleDownload = () => {
@@ -72,6 +74,19 @@ const FileCard: React.FC<FileCardProps> = ({ file, onRename, onMove, onDelete, o
                   className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                 >
                   <Download className="w-4 h-4 text-slate-400" /> Download
+                </button>
+                <div className="h-px bg-slate-100 my-1"></div>
+                <button 
+                  onClick={() => { setShowMenu(false); onShare(file); }}
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                >
+                  <Users className="w-4 h-4 text-slate-400" /> Share
+                </button>
+                <button 
+                  onClick={() => { setShowMenu(false); onHistory(file); }}
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                >
+                  <History className="w-4 h-4 text-slate-400" /> Version History
                 </button>
                 <div className="h-px bg-slate-100 my-1"></div>
                 <button 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Search, LogOut, User as UserIcon } from 'lucide-react';
-import { RootState } from '../../store/store';
+import { Search, LogOut } from 'lucide-react';
+import type {  RootState  } from '../../store/store';
 import { logout } from '../../store/authSlice';
 import { setSearchQuery } from '../../store/storageSlice';
 import { useNavigate } from 'react-router-dom';

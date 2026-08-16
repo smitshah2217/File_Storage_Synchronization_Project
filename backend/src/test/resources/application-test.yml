@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: cloudstorage
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate:
+        format_sql: false
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+jwt:
+  secret: this_is_a_test_jwt_secret_which_is_very_long_for_hs256_testing_only
+  expiration-ms: 86400000
+
+minio:
+  endpoint: http://localhost:9999
+  access-key: testaccess
+  secret-key: testsecret
+  bucket-name: test-bucket

@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance';
-import { FileDto } from '../types';
+import type { FileDto, FileVersionDto } from '../types';
 
 export const fileApi = {
   uploadFile: async (file: File, folderId: number | null): Promise<FileDto> => {
@@ -57,6 +57,33 @@ export const fileApi = {
   },
   getPreviewUrl: async (id: number): Promise<string> => {
     const response = await axiosInstance.get(`/files/${id}/preview`, { responseType: 'blob' });
-    return window.URL.createObjectURL(new Blob([response.data], { type: response.headers['content-type'] }));
+    return window.URL.createObjectURL(new Blob([response.data], { type: response.headers['content-type'] as string }));
+  },
+  getVersions: async (id: number): Promise<FileVersionDto[]> => {
+    const response = await axiosInstance.get(`/files/${id}/versions`);
+    return response.data;
+  },
+  downloadVersion: async (id: number, version: number, filename: string): Promise<void> => {
+    const response = await axiosInstance.get(`/files/${id}/versions/${version}/download`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
+  getPreviewUrlForVersion: async (id: number, version: number): Promise<string> => {
+    const response = await axiosInstance.get(`/files/${id}/versions/${version}/preview`, { responseType: 'blob' });
+    return window.URL.createObjectURL(new Blob([response.data], { type: response.headers['content-type'] as string }));
+  },
+  uploadNewVersion: async (id: number, file: File): Promise<FileVersionDto> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axiosInstance.post(`/files/${id}/versions`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
   }
 };

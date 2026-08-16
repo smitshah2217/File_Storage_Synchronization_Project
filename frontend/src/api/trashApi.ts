@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance';
-import { TrashContentsDto } from '../types';
+import type {  TrashContentsDto  } from '../types';
 
 export const trashApi = {
   getTrashContents: async (): Promise<TrashContentsDto> => {

@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import {  useCallback, useEffect, useState  } from 'react';
 import { Trash2, RotateCcw, AlertTriangle, Loader2, XCircle } from 'lucide-react';
-import { FolderDto, FileDto, TrashContentsDto } from '../types';
+import type { TrashContentsDto } from '../types';
 import { trashApi } from '../api/trashApi';
 import { folderApi } from '../api/folderApi';
 import { fileApi } from '../api/fileApi';

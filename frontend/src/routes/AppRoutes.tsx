@@ -1,4 +1,3 @@
-import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import Login from '../pages/Login';
@@ -7,6 +6,8 @@ import Dashboard from '../pages/Dashboard';
 import FileBrowser from '../pages/FileBrowser';
 import Trash from '../pages/Trash';
 import SearchResults from '../pages/SearchResults';
+import SharedWithMe from '../pages/SharedWithMe';
+import Recent from '../pages/Recent';
 
 const AppRoutes = () => {
   return (
@@ -22,6 +23,8 @@ const AppRoutes = () => {
           <Route path="/folder/:folderId" element={<FileBrowser />} />
           <Route path="/trash" element={<Trash />} />
           <Route path="/search" element={<SearchResults />} />
+          <Route path="/shared" element={<SharedWithMe />} />
+          <Route path="/recent" element={<Recent />} />
         </Route>
       </Route>
 

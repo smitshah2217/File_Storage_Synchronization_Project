@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance';
-import { StorageUsageDto } from '../types';
+import type {  StorageUsageDto  } from '../types';
 
 export const userApi = {
   getStorageUsage: async (): Promise<StorageUsageDto> => {

@@ -1,5 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { FolderDto } from '../types';
+import { createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
+import type {  FolderDto  } from '../types';
 
 interface StorageState {
   currentFolderId: number | null;

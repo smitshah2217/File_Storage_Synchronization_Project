@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import {  useEffect, useState  } from 'react';
 import { NavLink } from 'react-router-dom';
 import { HardDrive, Share2, Clock, Trash2, Cloud } from 'lucide-react';
 import { userApi } from '../../api/userApi';
-import { StorageUsageDto } from '../../types';
+import type {  StorageUsageDto  } from '../../types';
 
 const Sidebar = () => {
   const [storage, setStorage] = useState<StorageUsageDto | null>(null);

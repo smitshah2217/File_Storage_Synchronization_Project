@@ -1,7 +1,7 @@
-import React from 'react';
+import { Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
-import { FolderDto } from '../../types';
+import type {  FolderDto  } from '../../types';
 
 interface BreadcrumbNavProps {
   breadcrumbs: FolderDto[];
@@ -18,7 +18,7 @@ const BreadcrumbNav: React.FC<BreadcrumbNavProps> = ({ breadcrumbs }) => {
       </Link>
       
       {breadcrumbs.map((folder, index) => (
-        <React.Fragment key={folder.id}>
+        <Fragment key={folder.id}>
           <ChevronRight className="w-4 h-4 text-slate-300 flex-shrink-0" />
           <Link
             to={`/folder/${folder.id}`}
@@ -28,7 +28,7 @@ const BreadcrumbNav: React.FC<BreadcrumbNavProps> = ({ breadcrumbs }) => {
           >
             {folder.name}
           </Link>
-        </React.Fragment>
+        </Fragment>
       ))}
     </nav>
   );
