@@ -37,7 +37,7 @@ const Sidebar = () => {
         <div className="bg-blue-500/20 p-2 rounded-xl text-blue-400">
           <Cloud className="w-6 h-6" />
         </div>
-        Antigravity
+        Cloud Sync
       </div>
       
       <div className="flex-1 py-4 px-3 space-y-1">

@@ -25,9 +25,9 @@ const Register = () => {
       // 1. Register
       await authApi.register(formData);
       // 2. Auto-login after register
-      const loginData = await authApi.login({ 
-        usernameOrEmail: formData.username, 
-        password: formData.password 
+      const loginData = await authApi.login({
+        usernameOrEmail: formData.username,
+        password: formData.password
       });
       dispatch(setCredentials({ user: loginData.user, token: loginData.token }));
       navigate('/');
@@ -41,7 +41,7 @@ const Register = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[conic-gradient(at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-indigo-900 to-slate-900 text-white p-4">
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
-      
+
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 mb-6 shadow-2xl">
@@ -50,19 +50,19 @@ const Register = () => {
           <h1 className="text-4xl font-extrabold tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-300">
             Create Account
           </h1>
-          <p className="text-indigo-200/80">Join Antigravity Cloud Storage today.</p>
+          <p className="text-indigo-200/80">Join Cloud Sync Storage today.</p>
         </div>
 
         <div className="bg-white/5 backdrop-blur-2xl rounded-3xl p-8 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] relative overflow-hidden group">
           <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-3xl blur opacity-0 group-hover:opacity-20 transition duration-1000 -z-10"></div>
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-in fade-in slide-in-from-top-2">
                 {error}
               </div>
             )}
-            
+
             <div className="space-y-1">
               <label className="text-sm font-medium text-indigo-100 ml-1">Username</label>
               <div className="relative">
@@ -132,7 +132,7 @@ const Register = () => {
               )}
             </button>
           </form>
-          
+
           <div className="mt-8 text-center text-sm text-indigo-200/70">
             Already have an account?{' '}
             <Link to="/login" className="text-blue-400 hover:text-blue-300 font-medium hover:underline transition-colors">
