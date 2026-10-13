@@ -15,7 +15,6 @@ const RenameModal: React.FC<RenameModalProps> = ({ title, currentName, onSubmit,
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Focus and select text on mount
     if (inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
@@ -42,11 +41,11 @@ const RenameModal: React.FC<RenameModalProps> = ({ title, currentName, onSubmit,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative bg-white rounded-2xl shadow-2xl border border-[#D5DEEF] w-full max-w-md p-6 z-10 animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-slate-800">{title}</h2>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+          <h2 className="text-lg font-bold text-[#395886]">{title}</h2>
+          <button onClick={onClose} className="p-1 text-[#8AAEE0] hover:text-[#395886] hover:bg-[#F0F3FA] rounded-lg transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -62,21 +61,21 @@ const RenameModal: React.FC<RenameModalProps> = ({ title, currentName, onSubmit,
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 transition-all text-sm"
+            className="w-full px-4 py-3 bg-[#F0F3FA] border border-[#D5DEEF] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#8AAEE0]/30 focus:border-[#638ECB] text-[#395886] placeholder-[#8AAEE0] transition-all text-sm"
             placeholder="Enter name..."
           />
           <div className="flex justify-end gap-3 mt-5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              className="px-4 py-2.5 text-sm font-semibold text-[#638ECB] hover:text-[#395886] hover:bg-[#F0F3FA] rounded-xl transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition-colors flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 text-sm font-semibold text-white bg-[#638ECB] hover:bg-[#395886] rounded-xl transition-all shadow-md shadow-[#638ECB]/25 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               Save

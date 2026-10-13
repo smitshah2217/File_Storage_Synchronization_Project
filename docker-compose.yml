@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
 
   minio:
-    image: minio/minio
+    image: cgr.dev/chainguard/minio:latest
     container_name: cloudstorage-minio
     command: server /data --console-address ":9001"
     environment:
@@ -56,7 +56,7 @@ services:
       dockerfile: Dockerfile
     container_name: cloudstorage-frontend
     ports:
-      - "80:80"
+      - "3000:80"
     depends_on:
       - backend
     restart: unless-stopped

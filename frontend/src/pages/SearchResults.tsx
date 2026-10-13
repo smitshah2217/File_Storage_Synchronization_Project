@@ -1,8 +1,8 @@
-import {  useEffect, useState  } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Search as SearchIcon, Loader2, FolderOpen, File as FileIcon } from 'lucide-react';
 import { searchApi } from '../api/searchApi';
-import type {  FileDto, FolderDto  } from '../types';
+import type { FileDto, FolderDto } from '../types';
 
 const formatBytes = (bytes: number) => {
   if (bytes === 0) return '0 B';
@@ -32,40 +32,40 @@ const SearchResults = () => {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-800">Search Results</h1>
-        <p className="text-sm text-slate-400 mt-1">
-          Showing results for "<span className="text-slate-600 font-medium">{query}</span>"
+        <h1 className="text-2xl font-bold text-[#395886]">Search Results</h1>
+        <p className="text-sm text-[#638ECB] mt-1">
+          Showing results for "<span className="text-[#395886] font-bold">{query}</span>"
         </p>
       </div>
 
       {loading && (
-        <div className="flex items-center justify-center h-64 text-slate-400">
+        <div className="flex items-center justify-center h-64 text-[#8AAEE0]">
           <Loader2 className="w-8 h-8 animate-spin" />
         </div>
       )}
 
       {!loading && isEmpty && (
-        <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-          <SearchIcon className="w-16 h-16 mb-4 text-slate-300" />
-          <p className="text-lg font-medium text-slate-500">No results found</p>
-          <p className="text-sm mt-1">Try a different search term.</p>
+        <div className="flex flex-col items-center justify-center h-64 text-[#8AAEE0] bg-white/60 rounded-2xl border-2 border-dashed border-[#D5DEEF]">
+          <SearchIcon className="w-16 h-16 mb-4 text-[#8AAEE0]/50" />
+          <p className="text-lg font-semibold text-[#395886]">No results found</p>
+          <p className="text-sm mt-1 text-[#638ECB]">Try a different search term.</p>
         </div>
       )}
 
       {!loading && results && !isEmpty && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {results.folders.map((folder) => (
             <Link
               key={`folder-${folder.id}`}
               to={`/folder/${folder.id}`}
-              className="flex items-center gap-4 px-5 py-4 bg-white border border-slate-200 rounded-xl hover:shadow-md hover:border-blue-200 transition-all"
+              className="flex items-center gap-4 px-5 py-4 bg-white border border-[#D5DEEF] rounded-2xl hover:shadow-md hover:border-[#8AAEE0] transition-all"
             >
-              <div className="w-10 h-10 bg-blue-50 text-blue-500 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-[#F0F3FA] text-[#638ECB] rounded-xl flex items-center justify-center border border-[#D5DEEF]/60">
                 <FolderOpen className="w-5 h-5" />
               </div>
               <div>
-                <p className="font-medium text-slate-700">{folder.name}</p>
-                <p className="text-xs text-slate-400">Folder</p>
+                <p className="font-semibold text-[#395886]">{folder.name}</p>
+                <p className="text-xs text-[#8AAEE0]">Folder</p>
               </div>
             </Link>
           ))}
@@ -73,14 +73,14 @@ const SearchResults = () => {
           {results.files.map((file) => (
             <div
               key={`file-${file.id}`}
-              className="flex items-center gap-4 px-5 py-4 bg-white border border-slate-200 rounded-xl hover:shadow-md hover:border-indigo-200 transition-all"
+              className="flex items-center gap-4 px-5 py-4 bg-white border border-[#D5DEEF] rounded-2xl hover:shadow-md hover:border-[#8AAEE0] transition-all"
             >
-              <div className="w-10 h-10 bg-slate-50 text-slate-500 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-[#F0F3FA] text-[#638ECB] rounded-xl flex items-center justify-center border border-[#D5DEEF]/60">
                 <FileIcon className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-slate-700 truncate">{file.name}</p>
-                <p className="text-xs text-slate-400">{formatBytes(file.sizeBytes)}</p>
+                <p className="font-semibold text-[#395886] truncate">{file.name}</p>
+                <p className="text-xs text-[#8AAEE0]">{formatBytes(file.sizeBytes)}</p>
               </div>
             </div>
           ))}

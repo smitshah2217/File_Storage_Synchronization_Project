@@ -51,7 +51,6 @@ const ShareModal: React.FC<ShareModalProps> = ({ file, onClose }) => {
         expiresAt
       });
       
-      // Reset form
       setSharedWithUsername('');
       await fetchShares();
     } catch (err: any) {
@@ -78,40 +77,40 @@ const ShareModal: React.FC<ShareModalProps> = ({ file, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 z-10 flex flex-col max-h-[90vh]">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative bg-white rounded-2xl shadow-2xl border border-[#D5DEEF] w-full max-w-lg p-6 z-10 flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-xl font-semibold text-slate-800 flex items-center gap-2">
-            <Users className="w-5 h-5 text-blue-500" /> Share "{file.name}"
+          <h2 className="text-xl font-bold text-[#395886] flex items-center gap-2">
+            <Users className="w-5 h-5 text-[#638ECB]" /> Share "{file.name}"
           </h2>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg">
+          <button onClick={onClose} className="p-1 text-[#8AAEE0] hover:text-[#395886] hover:bg-[#F0F3FA] rounded-lg transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Create Share Form */}
-        <form onSubmit={handleCreateShare} className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 shrink-0">
+        <form onSubmit={handleCreateShare} className="bg-[#F0F3FA] p-4 rounded-xl border border-[#D5DEEF] mb-6 shrink-0">
           <div className="space-y-4">
             <div className="flex gap-4">
-              <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+              <label className="flex items-center gap-2 text-sm font-semibold text-[#395886] cursor-pointer">
                 <input 
                   type="radio" 
                   checked={isPublic} 
                   onChange={() => setIsPublic(true)} 
-                  className="w-4 h-4 text-blue-600" 
+                  className="w-4 h-4 text-[#638ECB]" 
                 />
-                <Globe className="w-4 h-4 text-slate-400" /> Anyone with the link
+                <Globe className="w-4 h-4 text-[#8AAEE0]" /> Anyone with the link
               </label>
-              <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+              <label className="flex items-center gap-2 text-sm font-semibold text-[#395886] cursor-pointer">
                 <input 
                   type="radio" 
                   checked={!isPublic} 
                   onChange={() => setIsPublic(false)} 
-                  className="w-4 h-4 text-blue-600" 
+                  className="w-4 h-4 text-[#638ECB]" 
                 />
-                <Users className="w-4 h-4 text-slate-400" /> Specific User
+                <Users className="w-4 h-4 text-[#8AAEE0]" /> Specific User
               </label>
             </div>
 
@@ -121,7 +120,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ file, onClose }) => {
                 value={sharedWithUsername}
                 onChange={(e) => setSharedWithUsername(e.target.value)}
                 placeholder="Enter username to share with..."
-                className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                className="w-full px-3 py-2 text-sm bg-white border border-[#D5DEEF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8AAEE0]/30 text-[#395886] placeholder-[#8AAEE0]"
                 required
               />
             )}
@@ -131,7 +130,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ file, onClose }) => {
                 <select
                   value={expiresInDays}
                   onChange={(e) => setExpiresInDays(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                  className="w-full px-3 py-2 text-sm bg-white border border-[#D5DEEF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8AAEE0]/30 text-[#395886]"
                 >
                   <option value="1">Expires in 1 day</option>
                   <option value="7">Expires in 7 days</option>
@@ -142,7 +141,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ file, onClose }) => {
               <button
                 type="submit"
                 disabled={creating || (!isPublic && !sharedWithUsername)}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-60"
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#638ECB] hover:bg-[#395886] rounded-xl transition-all shadow-md shadow-[#638ECB]/25 flex items-center gap-2 disabled:opacity-60"
               >
                 {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <LinkIcon className="w-4 h-4" />}
                 Generate Link
@@ -153,26 +152,26 @@ const ShareModal: React.FC<ShareModalProps> = ({ file, onClose }) => {
 
         {/* Existing Shares */}
         <div className="flex-1 overflow-y-auto">
-          <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Active Shares</h3>
+          <h3 className="text-xs font-bold text-[#8AAEE0] uppercase tracking-wider mb-3">Active Shares</h3>
           
           {loading ? (
-            <div className="flex items-center justify-center py-8 text-slate-400">
+            <div className="flex items-center justify-center py-8 text-[#8AAEE0]">
               <Loader2 className="w-6 h-6 animate-spin" />
             </div>
           ) : shares.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-8 bg-slate-50 rounded-xl border border-slate-100 dashed">
+            <p className="text-sm text-[#8AAEE0] text-center py-8 bg-[#F0F3FA] rounded-xl border border-[#D5DEEF] border-dashed">
               This file hasn't been shared yet.
             </p>
           ) : (
             <div className="space-y-3">
               {shares.map(share => (
-                <div key={share.id} className="flex items-center justify-between p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors group">
+                <div key={share.id} className="flex items-center justify-between p-3 border border-[#D5DEEF] rounded-xl hover:bg-[#F0F3FA] transition-colors group">
                   <div>
-                    <p className="text-sm font-medium text-slate-800 flex items-center gap-2">
-                      {share.isPublic ? <Globe className="w-4 h-4 text-blue-500" /> : <Users className="w-4 h-4 text-indigo-500" />}
+                    <p className="text-sm font-semibold text-[#395886] flex items-center gap-2">
+                      {share.isPublic ? <Globe className="w-4 h-4 text-[#638ECB]" /> : <Users className="w-4 h-4 text-[#8AAEE0]" />}
                       {share.isPublic ? 'Public Link' : `Shared with ${share.sharedWithUsername}`}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                    <p className="text-xs text-[#8AAEE0] mt-1 flex items-center gap-1 font-medium">
                       <Clock className="w-3 h-3" /> 
                       {share.expiresAt ? `Expires ${new Date(share.expiresAt).toLocaleDateString()}` : 'Never expires'}
                     </p>
@@ -180,14 +179,14 @@ const ShareModal: React.FC<ShareModalProps> = ({ file, onClose }) => {
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => copyToClipboard(share.id)}
-                      className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md"
+                      className="p-1.5 text-[#8AAEE0] hover:text-[#395886] hover:bg-white rounded-md transition-colors shadow-sm"
                       title="Copy Link"
                     >
                       <LinkIcon className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleRevoke(share.id)}
-                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md"
+                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                       title="Revoke Access"
                     >
                       <X className="w-4 h-4" />

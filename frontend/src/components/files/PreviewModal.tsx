@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, Loader2, Download } from 'lucide-react';
-import type {  FileDto  } from '../../types';
+import type { FileDto } from '../../types';
 import { fileApi } from '../../api/fileApi';
 
 interface PreviewModalProps {
@@ -49,29 +49,29 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ file, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden z-10">
+      <div className="relative bg-white rounded-2xl shadow-2xl border border-[#D5DEEF] w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#D5DEEF] bg-[#F0F3FA]/70">
           <div>
-            <h2 className="font-semibold text-slate-800 truncate max-w-md" title={file.name}>
+            <h2 className="font-bold text-[#395886] truncate max-w-md text-base" title={file.name}>
               {file.name}
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">Version {file.versionNumber}</p>
+            <p className="text-xs text-[#8AAEE0] mt-0.5 font-semibold">Version {file.versionNumber}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handleDownload}
-              className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              className="p-2 text-[#638ECB] hover:text-[#395886] hover:bg-white rounded-xl transition-colors shadow-sm"
               title="Download"
             >
               <Download className="w-5 h-5" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 text-[#8AAEE0] hover:text-[#395886] hover:bg-white rounded-xl transition-colors shadow-sm"
             >
               <X className="w-5 h-5" />
             </button>
@@ -79,11 +79,11 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ file, onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto flex items-center justify-center bg-slate-50 min-h-[400px]">
+        <div className="flex-1 overflow-auto flex items-center justify-center bg-[#F0F3FA] min-h-[400px]">
           {loading && (
-            <div className="flex flex-col items-center gap-3 text-slate-400">
+            <div className="flex flex-col items-center gap-3 text-[#8AAEE0]">
               <Loader2 className="w-8 h-8 animate-spin" />
-              <span className="text-sm">Loading preview...</span>
+              <span className="text-sm font-medium">Loading preview...</span>
             </div>
           )}
           {error && (
@@ -97,7 +97,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ file, onClose }) => {
                 <img
                   src={previewUrl}
                   alt={file.name}
-                  className="max-w-full max-h-[75vh] object-contain rounded-lg"
+                  className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-sm"
                 />
               ) : file.mimeType === 'application/pdf' ? (
                 <iframe
@@ -106,7 +106,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ file, onClose }) => {
                   title={file.name}
                 />
               ) : (
-                <p className="text-sm text-slate-500">Preview not available for this file type.</p>
+                <p className="text-sm text-[#8AAEE0]">Preview not available for this file type.</p>
               )}
             </>
           )}

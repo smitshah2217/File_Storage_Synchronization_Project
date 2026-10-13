@@ -1,4 +1,4 @@
-import {  useCallback, useEffect, useState  } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Trash2, RotateCcw, AlertTriangle, Loader2, XCircle } from 'lucide-react';
 import type { TrashContentsDto } from '../types';
 import { trashApi } from '../api/trashApi';
@@ -81,14 +81,14 @@ const Trash = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Trash</h1>
-          <p className="text-sm text-slate-400 mt-1">Items in trash are automatically deleted after 30 days.</p>
+          <h1 className="text-2xl font-bold text-[#395886]">Trash</h1>
+          <p className="text-sm text-[#638ECB] mt-1">Items in trash are automatically deleted after 30 days.</p>
         </div>
         {!isEmpty && (
           <button
             onClick={handleEmptyTrash}
             disabled={emptying}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-all disabled:opacity-60"
+            className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-all disabled:opacity-60 shadow-sm"
           >
             {emptying ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
             Empty Trash
@@ -98,42 +98,42 @@ const Trash = () => {
 
       {/* Loading */}
       {loading && (
-        <div className="flex items-center justify-center h-64 text-slate-400">
+        <div className="flex items-center justify-center h-64 text-[#8AAEE0]">
           <Loader2 className="w-8 h-8 animate-spin" />
         </div>
       )}
 
       {/* Empty */}
       {!loading && isEmpty && (
-        <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-          <Trash2 className="w-16 h-16 mb-4 text-slate-300" />
-          <p className="text-lg font-medium text-slate-500">Trash is empty</p>
-          <p className="text-sm mt-1">Deleted items will appear here.</p>
+        <div className="flex flex-col items-center justify-center h-64 text-[#8AAEE0] bg-white/60 rounded-2xl border-2 border-dashed border-[#D5DEEF]">
+          <Trash2 className="w-16 h-16 mb-4 text-[#8AAEE0]/50" />
+          <p className="text-lg font-semibold text-[#395886]">Trash is empty</p>
+          <p className="text-sm mt-1 text-[#638ECB]">Deleted items will appear here.</p>
         </div>
       )}
 
       {/* Items */}
       {!loading && contents && !isEmpty && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {/* Folders */}
           {contents.trashedFolders.map((folder) => (
             <div
               key={`folder-${folder.id}`}
-              className="flex items-center justify-between px-5 py-4 bg-white border border-slate-200 rounded-xl hover:shadow-md transition-all group"
+              className="flex items-center justify-between px-5 py-4 bg-white border border-[#D5DEEF] rounded-2xl hover:shadow-md hover:border-[#8AAEE0] transition-all group"
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-blue-50 text-blue-500 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-[#F0F3FA] text-[#638ECB] rounded-xl flex items-center justify-center border border-[#D5DEEF]/60">
                   <Trash2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="font-medium text-slate-700">{folder.name}</p>
-                  <p className="text-xs text-slate-400">Folder</p>
+                  <p className="font-semibold text-[#395886]">{folder.name}</p>
+                  <p className="text-xs text-[#8AAEE0]">Folder</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => handleRestore('folder', folder.id)}
-                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  className="p-2 text-[#8AAEE0] hover:text-[#395886] hover:bg-[#F0F3FA] rounded-lg transition-colors"
                   title="Restore"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -153,21 +153,21 @@ const Trash = () => {
           {contents.trashedFiles.map((file) => (
             <div
               key={`file-${file.id}`}
-              className="flex items-center justify-between px-5 py-4 bg-white border border-slate-200 rounded-xl hover:shadow-md transition-all group"
+              className="flex items-center justify-between px-5 py-4 bg-white border border-[#D5DEEF] rounded-2xl hover:shadow-md hover:border-[#8AAEE0] transition-all group"
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-slate-50 text-slate-500 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-[#F0F3FA] text-[#638ECB] rounded-xl flex items-center justify-center border border-[#D5DEEF]/60">
                   <Trash2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="font-medium text-slate-700">{file.name}</p>
-                  <p className="text-xs text-slate-400">{formatBytes(file.sizeBytes)}</p>
+                  <p className="font-semibold text-[#395886]">{file.name}</p>
+                  <p className="text-xs text-[#8AAEE0]">{formatBytes(file.sizeBytes)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => handleRestore('file', file.id)}
-                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  className="p-2 text-[#8AAEE0] hover:text-[#395886] hover:bg-[#F0F3FA] rounded-lg transition-colors"
                   title="Restore"
                 >
                   <RotateCcw className="w-4 h-4" />

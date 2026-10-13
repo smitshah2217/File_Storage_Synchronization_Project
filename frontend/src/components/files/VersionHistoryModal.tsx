@@ -47,7 +47,7 @@ const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({ file, onClose
     try {
       await fileApi.uploadNewVersion(file.id, selectedFile);
       await fetchVersions();
-      onVersionRestored(); // Notify parent to refresh file sizes
+      onVersionRestored();
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to upload new version.');
     } finally {
@@ -75,20 +75,20 @@ const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({ file, onClose
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
       
       {previewVersion ? (
         // Nested Preview Modal
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden z-20">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-            <h2 className="font-semibold text-slate-800">Preview: {file.name} (v{previewVersion.version})</h2>
-            <button onClick={closePreview} className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg">
+        <div className="relative bg-white rounded-2xl shadow-2xl border border-[#D5DEEF] w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[#D5DEEF] bg-[#F0F3FA]/70">
+            <h2 className="font-bold text-[#395886]">Preview: {file.name} (v{previewVersion.version})</h2>
+            <button onClick={closePreview} className="p-2 text-[#8AAEE0] hover:text-[#395886] hover:bg-white rounded-xl transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
-          <div className="flex-1 overflow-auto flex items-center justify-center bg-slate-50 min-h-[400px]">
+          <div className="flex-1 overflow-auto flex items-center justify-center bg-[#F0F3FA] min-h-[400px]">
              {file.mimeType.startsWith('image/') ? (
-               <img src={previewVersion.url} alt={file.name} className="max-w-full max-h-[75vh] object-contain rounded-lg" />
+               <img src={previewVersion.url} alt={file.name} className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-sm" />
              ) : (
                <iframe src={previewVersion.url} className="w-full h-[75vh] border-0" title={file.name} />
              )}
@@ -96,20 +96,20 @@ const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({ file, onClose
         </div>
       ) : (
         // Main Version History List
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 z-10 flex flex-col max-h-[90vh]">
+        <div className="relative bg-white rounded-2xl shadow-2xl border border-[#D5DEEF] w-full max-w-2xl p-6 z-10 flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
           <div className="flex items-center justify-between mb-6 shrink-0">
             <div>
-              <h2 className="text-xl font-semibold text-slate-800">Version History</h2>
-              <p className="text-sm text-slate-500 mt-1">{file.name}</p>
+              <h2 className="text-xl font-bold text-[#395886]">Version History</h2>
+              <p className="text-sm text-[#638ECB] mt-0.5">{file.name}</p>
             </div>
-            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg">
+            <button onClick={onClose} className="p-1 text-[#8AAEE0] hover:text-[#395886] hover:bg-[#F0F3FA] rounded-lg transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
 
           <div className="flex justify-end mb-4 shrink-0">
-            <label className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer">
-              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            <label className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-[#395886] bg-[#D5DEEF]/60 hover:bg-[#B1C9EF]/60 border border-[#D5DEEF] rounded-xl transition-all shadow-sm cursor-pointer">
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4 text-[#638ECB]" />}
               Upload New Version
               <input type="file" className="hidden" onChange={handleUploadNewVersion} disabled={uploading} />
             </label>
@@ -118,32 +118,32 @@ const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({ file, onClose
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+                <Loader2 className="w-8 h-8 animate-spin text-[#8AAEE0]" />
               </div>
             ) : (
               <div className="space-y-3">
                 {versions.map((v) => (
-                  <div key={v.id} className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:border-blue-200 hover:shadow-md transition-all group bg-white">
+                  <div key={v.id} className="flex items-center justify-between p-4 border border-[#D5DEEF] rounded-2xl hover:border-[#8AAEE0] hover:shadow-md transition-all group bg-white">
                     <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${v.versionNumber === file.versionNumber ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${v.versionNumber === file.versionNumber ? 'bg-[#638ECB] text-[#F0F3FA] shadow-sm' : 'bg-[#F0F3FA] text-[#8AAEE0] border border-[#D5DEEF]'}`}>
                         v{v.versionNumber}
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-slate-800">
+                        <p className="text-sm font-semibold text-[#395886]">
                           {new Date(v.createdAt).toLocaleString()}
-                          {v.versionNumber === file.versionNumber && <span className="ml-2 text-[10px] uppercase tracking-wider bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">Current</span>}
+                          {v.versionNumber === file.versionNumber && <span className="ml-2 text-[10px] uppercase font-bold tracking-wider bg-[#D5DEEF] text-[#395886] px-2 py-0.5 rounded-full">Current</span>}
                         </p>
-                        <p className="text-xs text-slate-500 mt-0.5">{formatBytes(v.sizeBytes)}</p>
+                        <p className="text-xs text-[#8AAEE0] mt-0.5 font-medium">{formatBytes(v.sizeBytes)}</p>
                       </div>
                     </div>
                     
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       {(file.mimeType.startsWith('image/') || file.mimeType === 'application/pdf') && (
-                        <button onClick={() => handlePreview(v.versionNumber)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg" title="Preview">
+                        <button onClick={() => handlePreview(v.versionNumber)} className="p-2 text-[#8AAEE0] hover:text-[#395886] hover:bg-[#F0F3FA] rounded-lg transition-colors" title="Preview">
                           <Eye className="w-4 h-4" />
                         </button>
                       )}
-                      <button onClick={() => handleDownload(v.versionNumber)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg" title="Download">
+                      <button onClick={() => handleDownload(v.versionNumber)} className="p-2 text-[#8AAEE0] hover:text-[#395886] hover:bg-[#F0F3FA] rounded-lg transition-colors" title="Download">
                         <Download className="w-4 h-4" />
                       </button>
                     </div>

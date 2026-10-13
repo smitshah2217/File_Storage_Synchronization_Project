@@ -127,7 +127,7 @@ const FileBrowser = () => {
 
   return (
     <div
-      className={`h-full transition-colors duration-200 rounded-2xl ${dragOver ? 'ring-2 ring-blue-400 ring-offset-4 bg-blue-50/50' : ''}`}
+      className={`h-full transition-colors duration-200 rounded-2xl ${dragOver ? 'ring-2 ring-[#638ECB] ring-offset-4 bg-[#D5DEEF]/40' : ''}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -136,19 +136,19 @@ const FileBrowser = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <BreadcrumbNav breadcrumbs={breadcrumbs} />
-          <h1 className="text-2xl font-bold text-slate-800">
+          <h1 className="text-2xl font-bold text-[#395886]">
             {currentFolderId ? contents?.folder?.name || 'Folder' : 'My Files'}
           </h1>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowCreateFolder(true)}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+            className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-[#395886] bg-white border border-[#D5DEEF] rounded-xl hover:bg-[#F0F3FA] hover:border-[#8AAEE0] transition-all shadow-sm"
           >
-            <FolderPlus className="w-4 h-4" />
+            <FolderPlus className="w-4 h-4 text-[#638ECB]" />
             New Folder
           </button>
-          <label className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition-all shadow-sm cursor-pointer">
+          <label className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#638ECB] hover:bg-[#395886] rounded-xl transition-all shadow-md shadow-[#638ECB]/25 cursor-pointer">
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             Upload
             <input
@@ -164,17 +164,17 @@ const FileBrowser = () => {
 
       {/* Loading */}
       {loading && (
-        <div className="flex items-center justify-center h-64 text-slate-400">
+        <div className="flex items-center justify-center h-64 text-[#8AAEE0]">
           <Loader2 className="w-8 h-8 animate-spin" />
         </div>
       )}
 
       {/* Empty state */}
       {!loading && isEmpty && (
-        <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-          <FolderOpen className="w-16 h-16 mb-4 text-slate-300" />
-          <p className="text-lg font-medium text-slate-500">This folder is empty</p>
-          <p className="text-sm mt-1">Drop files here or click Upload to get started.</p>
+        <div className="flex flex-col items-center justify-center h-64 text-[#8AAEE0] bg-white/60 rounded-2xl border-2 border-dashed border-[#D5DEEF]">
+          <FolderOpen className="w-16 h-16 mb-4 text-[#8AAEE0]/60" />
+          <p className="text-lg font-semibold text-[#395886]">This folder is empty</p>
+          <p className="text-sm mt-1 text-[#638ECB]">Drop files here or click Upload to get started.</p>
         </div>
       )}
 
@@ -184,7 +184,7 @@ const FileBrowser = () => {
           {/* Folders */}
           {contents.subfolders.length > 0 && (
             <div>
-              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Folders</h2>
+              <h2 className="text-xs font-bold text-[#8AAEE0] uppercase tracking-wider mb-4">Folders</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {contents.subfolders.map((folder) => (
                   <FolderCard
@@ -202,7 +202,7 @@ const FileBrowser = () => {
           {/* Files */}
           {contents.files.length > 0 && (
             <div>
-              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Files</h2>
+              <h2 className="text-xs font-bold text-[#8AAEE0] uppercase tracking-wider mb-4">Files</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {contents.files.map((file) => (
                   <FileCard
