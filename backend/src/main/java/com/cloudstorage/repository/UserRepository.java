@@ -1,21 +1,21 @@
 package com.cloudstorage.repository;
 
 import com.cloudstorage.entity.User;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.Optional;
-
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import jakarta.persistence.LockModeType;
+
+import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByUsername(String username);
-    Optional<User> findByEmail(String email);
-    Optional<User> findByUsernameOrEmail(String username, String email);
-    boolean existsByUsername(String username);
-    boolean existsByEmail(String email);
-    
+    Optional<User> findByUsernameIgnoreCaseOrEmailIgnoreCase(String username, String email);
+    boolean existsByUsernameIgnoreCase(String username);
+    boolean existsByEmailIgnoreCase(String email);
+    boolean existsByUsernameIgnoreCaseAndIdNot(String username, Long id);
+    boolean existsByEmailIgnoreCaseAndIdNot(String email, Long id);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT u FROM User u WHERE u.id = :id")
     Optional<User> findByIdWithPessimisticWriteLock(@Param("id") Long id);

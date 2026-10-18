@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { HardDrive, Share2, Clock, Trash2, Cloud } from 'lucide-react';
+import { HardDrive, Share2, Clock, Trash2, Cloud, UserRound } from 'lucide-react';
 import { userApi } from '../../api/userApi';
 import type { StorageUsageDto } from '../../types';
 
@@ -29,6 +29,7 @@ const Sidebar = () => {
     { name: 'Shared with me', path: '/shared', icon: <Share2 className="w-5 h-5" /> },
     { name: 'Recent', path: '/recent', icon: <Clock className="w-5 h-5" /> },
     { name: 'Trash', path: '/trash', icon: <Trash2 className="w-5 h-5" /> },
+    { name: 'Account settings', path: '/profile', icon: <UserRound className="w-5 h-5" /> },
   ];
 
   return (

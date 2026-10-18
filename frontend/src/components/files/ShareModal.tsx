@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { X, Loader2, Link as LinkIcon, Users, Clock, Globe } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { X, Loader2, Users, AlertCircle, UserPlus, XCircle } from 'lucide-react';
 import type { FileDto, ShareDto } from '../../types';
 import { shareApi } from '../../api/shareApi';
 
@@ -8,192 +8,86 @@ interface ShareModalProps {
   onClose: () => void;
 }
 
+const getErrorMessage = (error: unknown, fallback: string) =>
+  (error as { response?: { data?: { message?: string } } })?.response?.data?.message || fallback;
+
 const ShareModal: React.FC<ShareModalProps> = ({ file, onClose }) => {
   const [shares, setShares] = useState<ShareDto[]>([]);
+  const [username, setUsername] = useState('');
+  const [permission, setPermission] = useState<'VIEW' | 'EDIT'>('VIEW');
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  
-  // Form state
-  const [isPublic, setIsPublic] = useState(true);
-  const [sharedWithUsername, setSharedWithUsername] = useState('');
-  const [expiresInDays, setExpiresInDays] = useState('7');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   const fetchShares = useCallback(async () => {
     setLoading(true);
     try {
       const data = await shareApi.getFileShares(file.id);
-      setShares(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+      setShares(data.content);
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, 'Could not load sharing settings.'));
+    } finally { setLoading(false); }
   }, [file.id]);
 
-  useEffect(() => {
-    fetchShares();
-  }, [fetchShares]);
+  useEffect(() => { void fetchShares(); }, [fetchShares]);
 
-  const handleCreateShare = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCreating(true);
+  const handleCreateShare = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setSaving(true);
+    setError('');
     try {
-      let expiresAt: string | undefined;
-      if (expiresInDays !== 'never') {
-        const date = new Date();
-        date.setDate(date.getDate() + parseInt(expiresInDays));
-        expiresAt = date.toISOString();
-      }
-
-      await shareApi.createShare(file.id, {
-        isPublic,
-        sharedWithUsername: isPublic ? undefined : sharedWithUsername,
-        expiresAt
-      });
-      
-      setSharedWithUsername('');
+      await shareApi.createShare(file.id, { sharedWithUsername: username.trim(), permission });
+      setUsername('');
+      setPermission('VIEW');
       await fetchShares();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to create share link.');
-    } finally {
-      setCreating(false);
-    }
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, 'Could not share this file.'));
+    } finally { setSaving(false); }
   };
 
-  const handleRevoke = async (shareId: number) => {
+  const updatePermission = async (share: ShareDto, nextPermission: 'VIEW' | 'EDIT') => {
+    setError('');
     try {
-      await shareApi.revokeShare(shareId);
+      await shareApi.updateShare(file.id, share.id, nextPermission);
       await fetchShares();
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (requestError) { setError(getErrorMessage(requestError, 'Could not update permission.')); }
   };
 
-  const copyToClipboard = (shareId: number) => {
-    const url = `${window.location.origin}/s/${shareId}`;
-    navigator.clipboard.writeText(url);
-    alert('Link copied to clipboard!');
+  const revokeShare = async (share: ShareDto) => {
+    if (!window.confirm(`Remove ${share.sharedWithUsername}’s access to “${file.name}”?`)) return;
+    setError('');
+    try {
+      await shareApi.revokeShare(file.id, share.id);
+      await fetchShares();
+    } catch (requestError) { setError(getErrorMessage(requestError, 'Could not revoke access.')); }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative bg-white rounded-2xl shadow-2xl border border-[#D5DEEF] w-full max-w-lg p-6 z-10 flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-xl font-bold text-[#395886] flex items-center gap-2">
-            <Users className="w-5 h-5 text-[#638ECB]" /> Share "{file.name}"
-          </h2>
-          <button onClick={onClose} className="p-1 text-[#8AAEE0] hover:text-[#395886] hover:bg-[#F0F3FA] rounded-lg transition-colors">
-            <X className="w-5 h-5" />
-          </button>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col rounded-2xl border border-[#D5DEEF] bg-white p-6 shadow-2xl">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-xl font-bold text-[#395886]"><Users className="h-5 w-5 text-[#638ECB]" />Share “{file.name}”</h2>
+          <button onClick={onClose} className="rounded-lg p-1 text-[#8AAEE0] hover:bg-[#F0F3FA] hover:text-[#395886]" aria-label="Close"><X className="h-5 w-5" /></button>
         </div>
 
-        {/* Create Share Form */}
-        <form onSubmit={handleCreateShare} className="bg-[#F0F3FA] p-4 rounded-xl border border-[#D5DEEF] mb-6 shrink-0">
-          <div className="space-y-4">
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 text-sm font-semibold text-[#395886] cursor-pointer">
-                <input 
-                  type="radio" 
-                  checked={isPublic} 
-                  onChange={() => setIsPublic(true)} 
-                  className="w-4 h-4 text-[#638ECB]" 
-                />
-                <Globe className="w-4 h-4 text-[#8AAEE0]" /> Anyone with the link
-              </label>
-              <label className="flex items-center gap-2 text-sm font-semibold text-[#395886] cursor-pointer">
-                <input 
-                  type="radio" 
-                  checked={!isPublic} 
-                  onChange={() => setIsPublic(false)} 
-                  className="w-4 h-4 text-[#638ECB]" 
-                />
-                <Users className="w-4 h-4 text-[#8AAEE0]" /> Specific User
-              </label>
-            </div>
+        {error && <div role="alert" className="mb-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{error}</div>}
 
-            {!isPublic && (
-              <input
-                type="text"
-                value={sharedWithUsername}
-                onChange={(e) => setSharedWithUsername(e.target.value)}
-                placeholder="Enter username to share with..."
-                className="w-full px-3 py-2 text-sm bg-white border border-[#D5DEEF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8AAEE0]/30 text-[#395886] placeholder-[#8AAEE0]"
-                required
-              />
-            )}
-
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
-                <select
-                  value={expiresInDays}
-                  onChange={(e) => setExpiresInDays(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white border border-[#D5DEEF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8AAEE0]/30 text-[#395886]"
-                >
-                  <option value="1">Expires in 1 day</option>
-                  <option value="7">Expires in 7 days</option>
-                  <option value="30">Expires in 30 days</option>
-                  <option value="never">Never expires</option>
-                </select>
-              </div>
-              <button
-                type="submit"
-                disabled={creating || (!isPublic && !sharedWithUsername)}
-                className="px-4 py-2 text-sm font-semibold text-white bg-[#638ECB] hover:bg-[#395886] rounded-xl transition-all shadow-md shadow-[#638ECB]/25 flex items-center gap-2 disabled:opacity-60"
-              >
-                {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <LinkIcon className="w-4 h-4" />}
-                Generate Link
-              </button>
-            </div>
+        <form onSubmit={(event) => void handleCreateShare(event)} className="mb-6 rounded-xl border border-[#D5DEEF] bg-[#F0F3FA] p-4">
+          <label htmlFor="share-username" className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#395886]">Share with a user</label>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <input id="share-username" value={username} onChange={(event) => setUsername(event.target.value)} required minLength={3} maxLength={30} pattern="[A-Za-z0-9_]+" placeholder="Username" className="min-w-0 flex-1 rounded-lg border border-[#D5DEEF] bg-white px-3 py-2 text-sm text-[#395886] focus:border-[#638ECB] focus:outline-none focus:ring-2 focus:ring-[#8AAEE0]/30" />
+            <select value={permission} onChange={(event) => setPermission(event.target.value as 'VIEW' | 'EDIT')} className="rounded-lg border border-[#D5DEEF] bg-white px-3 py-2 text-sm text-[#395886]"><option value="VIEW">Can view</option><option value="EDIT">Can edit name/move</option></select>
+            <button type="submit" disabled={saving || !username.trim()} className="flex items-center justify-center gap-2 rounded-xl bg-[#638ECB] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#395886] disabled:opacity-60">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}Share</button>
           </div>
+          <p className="mt-2 text-xs text-[#638ECB]">The recipient needs an account. Folder sharing and public links are not part of this project.</p>
         </form>
 
-        {/* Existing Shares */}
-        <div className="flex-1 overflow-y-auto">
-          <h3 className="text-xs font-bold text-[#8AAEE0] uppercase tracking-wider mb-3">Active Shares</h3>
-          
-          {loading ? (
-            <div className="flex items-center justify-center py-8 text-[#8AAEE0]">
-              <Loader2 className="w-6 h-6 animate-spin" />
-            </div>
-          ) : shares.length === 0 ? (
-            <p className="text-sm text-[#8AAEE0] text-center py-8 bg-[#F0F3FA] rounded-xl border border-[#D5DEEF] border-dashed">
-              This file hasn't been shared yet.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {shares.map(share => (
-                <div key={share.id} className="flex items-center justify-between p-3 border border-[#D5DEEF] rounded-xl hover:bg-[#F0F3FA] transition-colors group">
-                  <div>
-                    <p className="text-sm font-semibold text-[#395886] flex items-center gap-2">
-                      {share.isPublic ? <Globe className="w-4 h-4 text-[#638ECB]" /> : <Users className="w-4 h-4 text-[#8AAEE0]" />}
-                      {share.isPublic ? 'Public Link' : `Shared with ${share.sharedWithUsername}`}
-                    </p>
-                    <p className="text-xs text-[#8AAEE0] mt-1 flex items-center gap-1 font-medium">
-                      <Clock className="w-3 h-3" /> 
-                      {share.expiresAt ? `Expires ${new Date(share.expiresAt).toLocaleDateString()}` : 'Never expires'}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => copyToClipboard(share.id)}
-                      className="p-1.5 text-[#8AAEE0] hover:text-[#395886] hover:bg-white rounded-md transition-colors shadow-sm"
-                      title="Copy Link"
-                    >
-                      <LinkIcon className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleRevoke(share.id)}
-                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                      title="Revoke Access"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-[#8AAEE0]">People with access</h3>
+          {loading ? <div className="flex justify-center py-8 text-[#8AAEE0]"><Loader2 className="h-6 w-6 animate-spin" /></div> : shares.length === 0 ? <p className="rounded-xl border border-dashed border-[#D5DEEF] bg-[#F0F3FA] py-8 text-center text-sm text-[#8AAEE0]">This file is not shared yet.</p> : (
+            <div className="space-y-2">
+              {shares.map((share) => <div key={share.id} className="flex flex-col justify-between gap-3 rounded-xl border border-[#D5DEEF] p-3 sm:flex-row sm:items-center"><div className="flex min-w-0 items-center gap-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F0F3FA] text-[#638ECB]"><Users className="h-4 w-4" /></div><div className="min-w-0"><p className="truncate text-sm font-semibold text-[#395886]">{share.sharedWithUsername}</p><p className="text-xs text-[#8AAEE0]">Added {new Date(share.createdAt).toLocaleDateString()}</p></div></div><div className="flex items-center gap-2"><select aria-label={`Permission for ${share.sharedWithUsername}`} value={share.permission} onChange={(event) => void updatePermission(share, event.target.value as 'VIEW' | 'EDIT')} className="rounded-lg border border-[#D5DEEF] bg-white px-2 py-1.5 text-xs text-[#395886]"><option value="VIEW">View</option><option value="EDIT">Edit</option></select><button onClick={() => void revokeShare(share)} className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600" title="Revoke access"><XCircle className="h-4 w-4" /></button></div></div>)}
             </div>
           )}
         </div>

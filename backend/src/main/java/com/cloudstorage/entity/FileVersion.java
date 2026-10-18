@@ -28,6 +28,9 @@ public class FileVersion {
     @Column(nullable = false)
     private Long sizeBytes;
 
+    @Column(nullable = false, length = 100)
+    private String mimeType;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "uploaded_by")
     private User uploadedBy;

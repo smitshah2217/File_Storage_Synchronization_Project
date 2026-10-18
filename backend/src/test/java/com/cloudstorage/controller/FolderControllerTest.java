@@ -102,8 +102,8 @@ class FolderControllerTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/folders/root")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.subfolders", hasSize(2)))
-                .andExpect(jsonPath("$.subfolders[*].name", containsInAnyOrder("Folder1", "Folder2")));
+                .andExpect(jsonPath("$.subfolders.content", hasSize(2)))
+                .andExpect(jsonPath("$.subfolders.content[*].name", containsInAnyOrder("Folder1", "Folder2")));
     }
 
     @Test
@@ -112,8 +112,8 @@ class FolderControllerTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/folders/root")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.subfolders", hasSize(0)))
-                .andExpect(jsonPath("$.files", hasSize(0)));
+                .andExpect(jsonPath("$.subfolders.content", hasSize(0)))
+                .andExpect(jsonPath("$.files.content", hasSize(0)));
     }
 
     // ========== Get Folder Contents ==========
@@ -140,8 +140,8 @@ class FolderControllerTest extends BaseIntegrationTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.folder.name").value("Parent"))
-                .andExpect(jsonPath("$.subfolders", hasSize(1)))
-                .andExpect(jsonPath("$.subfolders[0].name").value("NestedChild"));
+                .andExpect(jsonPath("$.subfolders.content", hasSize(1)))
+                .andExpect(jsonPath("$.subfolders.content[0].name").value("NestedChild"));
     }
 
     // ========== Breadcrumb ==========
@@ -223,7 +223,7 @@ class FolderControllerTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/folders/root")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.subfolders", hasSize(0)));
+                .andExpect(jsonPath("$.subfolders.content", hasSize(0)));
     }
 
     @Test
@@ -250,7 +250,7 @@ class FolderControllerTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/folders/root")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.subfolders", hasSize(1)))
-                .andExpect(jsonPath("$.subfolders[0].name").value("ToRestore"));
+                .andExpect(jsonPath("$.subfolders.content", hasSize(1)))
+                .andExpect(jsonPath("$.subfolders.content[0].name").value("ToRestore"));
     }
 }

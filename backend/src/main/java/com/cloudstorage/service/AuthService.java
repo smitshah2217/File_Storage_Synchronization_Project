@@ -6,21 +6,21 @@ import com.cloudstorage.dto.response.AuthResponse;
 import com.cloudstorage.dto.response.UserDto;
 import com.cloudstorage.entity.User;
 import com.cloudstorage.exception.DuplicateResourceException;
+import com.cloudstorage.exception.ResourceNotFoundException;
 import com.cloudstorage.repository.UserRepository;
 import com.cloudstorage.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -28,45 +28,48 @@ public class AuthService {
 
     @Transactional
     public UserDto register(RegisterRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
+        String username = request.getUsername().trim();
+        String email = request.getEmail().trim().toLowerCase(Locale.ROOT);
+        if (userRepository.existsByUsernameIgnoreCase(username)) {
             throw new DuplicateResourceException("Username already taken");
         }
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new DuplicateResourceException("Email already taken");
         }
-
         User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
+        user.setUsername(username);
+        user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        
-        User savedUser = userRepository.save(user);
-        
-        return UserDto.builder()
-                .id(savedUser.getId())
-                .username(savedUser.getUsername())
-                .email(savedUser.getEmail())
-                .build();
+        return toDto(userRepository.save(user));
     }
 
     public AuthResponse login(LoginRequest request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsernameOrEmail(), request.getPassword())
-        );
-
-        User user = userRepository.findByUsernameOrEmail(request.getUsernameOrEmail(), request.getUsernameOrEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        String token = jwtUtil.generateToken(user.getId(), user.getUsername());
-
+        String login = request.getUsernameOrEmail().trim();
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(login, request.getPassword()));
+        User user = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(login, login)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return AuthResponse.builder()
-                .token(token)
+                .token(jwtUtil.generateToken(user.getId(), user.getUsername()))
                 .expiresIn(jwtUtil.getExpirationMs())
-                .user(UserDto.builder()
-                        .id(user.getId())
-                        .username(user.getUsername())
-                        .email(user.getEmail())
-                        .build())
+                .user(toDto(user))
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public AuthResponse refresh(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return AuthResponse.builder()
+                .token(jwtUtil.generateToken(user.getId(), user.getUsername()))
+                .expiresIn(jwtUtil.getExpirationMs())
+                .build();
+    }
+
+    private UserDto toDto(User user) {
+        return UserDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
                 .build();
     }
 }

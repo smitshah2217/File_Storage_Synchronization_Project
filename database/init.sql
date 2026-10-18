@@ -9,6 +9,9 @@ CREATE TABLE users (
     updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
+CREATE UNIQUE INDEX uq_users_username_lower ON users (lower(username));
+CREATE UNIQUE INDEX uq_users_email_lower ON users (lower(email));
+
 CREATE TABLE folders (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -55,6 +58,7 @@ CREATE TABLE file_versions (
     version_number INT NOT NULL,
     minio_object_key VARCHAR(500) NOT NULL UNIQUE,
     size_bytes BIGINT NOT NULL,
+    mime_type VARCHAR(100) NOT NULL DEFAULT 'application/octet-stream',
     uploaded_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
     uploaded_at TIMESTAMP NOT NULL DEFAULT now(),
     UNIQUE (file_id, version_number)
