@@ -1,20 +1,28 @@
 import axiosInstance from './axiosInstance';
-import type { ShareDto } from '../types';
+import type { PageResponse, ShareDto } from '../types';
 
 export const shareApi = {
-  getSharedWithMe: async (): Promise<ShareDto[]> => {
-    const response = await axiosInstance.get('/shared-with-me');
+  getSharedWithMe: async (page = 0, size = 20): Promise<PageResponse<ShareDto>> => {
+    const response = await axiosInstance.get<PageResponse<ShareDto>>('/shared/files', { params: { page, size } });
     return response.data;
   },
-  getFileShares: async (fileId: number): Promise<ShareDto[]> => {
-    const response = await axiosInstance.get(`/files/${fileId}/shares`);
+  getSharedByMe: async (page = 0, size = 20): Promise<PageResponse<ShareDto>> => {
+    const response = await axiosInstance.get<PageResponse<ShareDto>>('/shared/by-me', { params: { page, size } });
     return response.data;
   },
-  createShare: async (fileId: number, data: { sharedWithUsername?: string; isPublic: boolean; expiresAt?: string }): Promise<ShareDto> => {
-    const response = await axiosInstance.post(`/files/${fileId}/share`, data);
+  getFileShares: async (fileId: number, page = 0, size = 20): Promise<PageResponse<ShareDto>> => {
+    const response = await axiosInstance.get<PageResponse<ShareDto>>(`/files/${fileId}/share`, { params: { page, size } });
     return response.data;
   },
-  revokeShare: async (shareId: number): Promise<void> => {
-    await axiosInstance.delete(`/shares/${shareId}`);
-  }
+  createShare: async (fileId: number, data: { sharedWithUsername: string; permission: 'VIEW' | 'EDIT' }): Promise<ShareDto> => {
+    const response = await axiosInstance.post<ShareDto>(`/files/${fileId}/share`, data);
+    return response.data;
+  },
+  updateShare: async (fileId: number, shareId: number, permission: 'VIEW' | 'EDIT'): Promise<ShareDto> => {
+    const response = await axiosInstance.put<ShareDto>(`/files/${fileId}/share/${shareId}`, { permission });
+    return response.data;
+  },
+  revokeShare: async (fileId: number, shareId: number): Promise<void> => {
+    await axiosInstance.delete(`/files/${fileId}/share/${shareId}`);
+  },
 };

@@ -11,6 +11,7 @@ public class FileVersionDto {
     private Long fileId;
     private Integer versionNumber;
     private Long sizeBytes;
+    private String mimeType;
     private Long uploadedById;
     private String uploadedByUsername;
     private Instant uploadedAt;

@@ -1,6 +1,7 @@
 package com.cloudstorage.controller;
 
 import com.cloudstorage.dto.request.FolderCreateRequest;
+import com.cloudstorage.dto.request.FolderUpdateRequest;
 import com.cloudstorage.dto.response.FolderContentDto;
 import com.cloudstorage.dto.response.FolderDto;
 import com.cloudstorage.service.FolderService;
@@ -9,13 +10,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/folders")
 @RequiredArgsConstructor
 public class FolderController {
-
     private final FolderService folderService;
 
     @PostMapping
@@ -24,13 +25,18 @@ public class FolderController {
     }
 
     @GetMapping("/root")
-    public ResponseEntity<FolderContentDto> getRootContents() {
-        return ResponseEntity.ok(folderService.getRootContents());
+    public ResponseEntity<FolderContentDto> getRootContents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(folderService.getRootContents(page, size));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<FolderContentDto> getFolderContents(@PathVariable Long id) {
-        return ResponseEntity.ok(folderService.getFolderContents(id));
+    public ResponseEntity<FolderContentDto> getFolderContents(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(folderService.getFolderContents(id, page, size));
     }
 
     @GetMapping("/{id}/breadcrumb")
@@ -39,7 +45,7 @@ public class FolderController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<FolderDto> updateFolder(@PathVariable Long id, @Valid @RequestBody com.cloudstorage.dto.request.FolderUpdateRequest request) {
+    public ResponseEntity<FolderDto> updateFolder(@PathVariable Long id, @Valid @RequestBody FolderUpdateRequest request) {
         return ResponseEntity.ok(folderService.updateFolder(id, request));
     }
 

@@ -2,11 +2,10 @@ package com.cloudstorage.dto.response;
 
 import lombok.Builder;
 import lombok.Data;
-import java.util.List;
 
 @Data
 @Builder
 public class TrashContentsDto {
-    private List<FolderDto> folders;
-    private List<FileDto> files;
+    private PageResponse<FolderDto> folders;
+    private PageResponse<FileDto> files;
 }

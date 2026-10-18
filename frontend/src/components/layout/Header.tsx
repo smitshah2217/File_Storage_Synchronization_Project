@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Search, LogOut } from 'lucide-react';
+import { Search, LogOut, UserRound } from 'lucide-react';
 import type { RootState } from '../../store/store';
 import { logout } from '../../store/authSlice';
 import { setSearchQuery } from '../../store/storageSlice';
+import { authApi } from '../../api/authApi';
 import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
@@ -22,9 +23,15 @@ const Header = () => {
     }
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // Stateless logout still succeeds locally if the API cannot be reached.
+    } finally {
+      dispatch(logout());
+      navigate('/login');
+    }
   };
 
   return (
@@ -44,14 +51,17 @@ const Header = () => {
 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3 px-3.5 py-1.5 bg-white/90 rounded-full border border-[#D5DEEF] shadow-sm">
-          <div className="w-8 h-8 rounded-full bg-[#638ECB] text-[#F0F3FA] flex items-center justify-center font-bold text-sm shadow-inner">
-            {user?.username?.[0]?.toUpperCase() || 'U'}
-          </div>
-          <span className="text-sm font-semibold text-[#395886] hidden sm:block">{user?.username}</span>
-          <button 
+          <button onClick={() => navigate('/profile')} className="flex items-center gap-3 rounded-full text-left" title="Account settings">
+            <div className="w-8 h-8 rounded-full bg-[#638ECB] text-[#F0F3FA] flex items-center justify-center font-bold text-sm shadow-inner">
+              {user?.username?.[0]?.toUpperCase() || <UserRound className="h-4 w-4" />}
+            </div>
+            <span className="text-sm font-semibold text-[#395886] hidden sm:block">{user?.username}</span>
+          </button>
+          <button
             onClick={handleLogout}
             className="ml-1 text-[#8AAEE0] hover:text-red-500 transition-colors p-1 rounded-full hover:bg-[#D5DEEF]/50"
             title="Logout"
+            aria-label="Logout"
           >
             <LogOut className="w-4 h-4" />
           </button>

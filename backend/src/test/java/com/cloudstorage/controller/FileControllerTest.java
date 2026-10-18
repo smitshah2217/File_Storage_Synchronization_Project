@@ -127,7 +127,7 @@ class FileControllerTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/folders/root")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.files", hasSize(0)));
+                .andExpect(jsonPath("$.files.content", hasSize(0)));
     }
 
     @Test
@@ -154,8 +154,8 @@ class FileControllerTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/folders/root")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.files", hasSize(1)))
-                .andExpect(jsonPath("$.files[0].name").value("restoreme.txt"));
+                .andExpect(jsonPath("$.files.content", hasSize(1)))
+                .andExpect(jsonPath("$.files.content[0].name").value("restoreme.txt"));
     }
 
     // ========== Version History ==========
@@ -174,7 +174,41 @@ class FileControllerTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/files/" + fileId + "/versions")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
-                .andExpect(jsonPath("$[0].versionNumber").value(1));
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].versionNumber").value(1))
+                .andExpect(jsonPath("$.content[0].mimeType").value("text/plain"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    @DisplayName("Version uploads and restores preserve per-version MIME metadata")
+    void uploadAndRestoreVersion() throws Exception {
+        MockMultipartFile original = new MockMultipartFile("file", "versioned.txt", "text/plain", "plain".getBytes());
+        String uploadResponse = mockMvc.perform(multipart("/api/files/upload")
+                        .file(original)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Long fileId = objectMapper.readTree(uploadResponse).get("id").asLong();
+
+        MockMultipartFile replacement = new MockMultipartFile("file", "versioned.txt", "application/pdf", "pdf".getBytes());
+        mockMvc.perform(multipart("/api/files/" + fileId + "/versions")
+                        .file(replacement)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.versionNumber").value(2))
+                .andExpect(jsonPath("$.mimeType").value("application/pdf"));
+
+        mockMvc.perform(get("/api/files/" + fileId + "/versions")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].versionNumber").value(2))
+                .andExpect(jsonPath("$.content[0].mimeType").value("application/pdf"));
+
+        mockMvc.perform(post("/api/files/" + fileId + "/versions/1/restore")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.versionNumber").value(3))
+                .andExpect(jsonPath("$.mimeType").value("text/plain"));
     }
 }

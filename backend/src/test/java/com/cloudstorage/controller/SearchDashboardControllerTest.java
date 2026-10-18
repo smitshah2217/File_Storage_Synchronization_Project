@@ -44,10 +44,10 @@ class SearchDashboardControllerTest extends BaseIntegrationTest {
                         .param("q", "project")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.folders", hasSize(1)))
-                .andExpect(jsonPath("$.folders[0].name").value("Projects"))
-                .andExpect(jsonPath("$.files", hasSize(1)))
-                .andExpect(jsonPath("$.files[0].name").value("project_report.pdf"));
+                .andExpect(jsonPath("$.folders.content", hasSize(1)))
+                .andExpect(jsonPath("$.folders.content[0].name").value("Projects"))
+                .andExpect(jsonPath("$.files.content", hasSize(1)))
+                .andExpect(jsonPath("$.files.content[0].name").value("project_report.pdf"));
     }
 
     @Test
@@ -57,8 +57,8 @@ class SearchDashboardControllerTest extends BaseIntegrationTest {
                         .param("q", "nothing")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.folders", hasSize(0)))
-                .andExpect(jsonPath("$.files", hasSize(0)));
+                .andExpect(jsonPath("$.folders.content", hasSize(0)))
+                .andExpect(jsonPath("$.files.content", hasSize(0)));
     }
 
     // ========== Dashboard ==========

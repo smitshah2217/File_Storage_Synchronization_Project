@@ -8,6 +8,7 @@ import Trash from '../pages/Trash';
 import SearchResults from '../pages/SearchResults';
 import SharedWithMe from '../pages/SharedWithMe';
 import Recent from '../pages/Recent';
+import Profile from '../pages/Profile';
 
 const AppRoutes = () => {
   return (
@@ -25,6 +26,7 @@ const AppRoutes = () => {
           <Route path="/search" element={<SearchResults />} />
           <Route path="/shared" element={<SharedWithMe />} />
           <Route path="/recent" element={<Recent />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
       </Route>
 

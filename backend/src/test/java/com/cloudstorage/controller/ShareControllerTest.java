@@ -6,9 +6,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class ShareControllerTest extends BaseIntegrationTest {
@@ -26,80 +31,110 @@ class ShareControllerTest extends BaseIntegrationTest {
         String uploadResponse = mockMvc.perform(multipart("/api/files/upload")
                         .file(file)
                         .header("Authorization", "Bearer " + tokenOwner))
+                .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-
         fileId = objectMapper.readTree(uploadResponse).get("id").asLong();
     }
 
     @Test
-    @DisplayName("POST /api/files/{fileId}/shares - Success: Create restricted share")
-    void shareFile_Restricted_Success() throws Exception {
-        String body = "{\"type\":\"RESTRICTED\",\"sharedWithUsername\":\"sharereceiver\",\"permission\":\"VIEW\"}";
-        mockMvc.perform(post("/api/files/" + fileId + "/shares")
+    @DisplayName("POST /api/files/{fileId}/share - creates a user-to-user VIEW share")
+    void shareFile_Success() throws Exception {
+        mockMvc.perform(post("/api/files/" + fileId + "/share")
                         .header("Authorization", "Bearer " + tokenOwner)
                         .contentType("application/json")
-                        .content(body))
+                        .content("{\"sharedWithUsername\":\"sharereceiver\",\"permission\":\"VIEW\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.type").value("RESTRICTED"))
-                .andExpect(jsonPath("$.sharedWith.username").value("sharereceiver"))
+                .andExpect(jsonPath("$.fileId").value(fileId))
+                .andExpect(jsonPath("$.fileName").value("shareable.txt"))
+                .andExpect(jsonPath("$.sharedWithUsername").value("sharereceiver"))
                 .andExpect(jsonPath("$.permission").value("VIEW"));
     }
 
     @Test
-    @DisplayName("POST /api/files/{fileId}/shares - Success: Create public share")
-    void shareFile_Public_Success() throws Exception {
-        String body = "{\"type\":\"PUBLIC\",\"permission\":\"VIEW\"}";
-        mockMvc.perform(post("/api/files/" + fileId + "/shares")
+    @DisplayName("POST /api/files/{fileId}/share - rejects public links")
+    void shareFile_PublicLinksNotSupported() throws Exception {
+        mockMvc.perform(post("/api/files/" + fileId + "/share")
                         .header("Authorization", "Bearer " + tokenOwner)
                         .contentType("application/json")
-                        .content(body))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.type").value("PUBLIC"))
-                .andExpect(jsonPath("$.shareLink").isNotEmpty());
+                        .content("{\"type\":\"PUBLIC\",\"permission\":\"VIEW\"}"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("GET /api/shared-with-me - Success: See restricted shared file")
+    @DisplayName("GET /api/shared/files - recipient sees the shared file")
     void getSharedWithMe_Success() throws Exception {
-        // Create share
-        String body = "{\"type\":\"RESTRICTED\",\"sharedWithUsername\":\"sharereceiver\",\"permission\":\"VIEW\"}";
-        mockMvc.perform(post("/api/files/" + fileId + "/shares")
-                        .header("Authorization", "Bearer " + tokenOwner)
-                        .contentType("application/json")
-                        .content(body))
+        mockMvc.perform(post("/api/files/" + fileId + "/share")
+                .header("Authorization", "Bearer " + tokenOwner)
+                .contentType("application/json")
+                .content("{\"sharedWithUsername\":\"sharereceiver\",\"permission\":\"VIEW\"}"))
                 .andExpect(status().isCreated());
 
-        // Receiver requests shared files
-        mockMvc.perform(get("/api/shared-with-me")
+        mockMvc.perform(get("/api/shared/files")
                         .header("Authorization", "Bearer " + tokenReceiver))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].file.name").value("shareable.txt"));
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].fileName").value("shareable.txt"))
+                .andExpect(jsonPath("$.content[0].ownerUsername").value("shareowner"));
+
+        mockMvc.perform(get("/api/files/" + fileId)
+                        .header("Authorization", "Bearer " + tokenReceiver))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("shareable.txt"));
     }
 
     @Test
-    @DisplayName("DELETE /api/files/{fileId}/shares/{shareId} - Success: Revoke share")
+    @DisplayName("VIEW share permits reads but denies edits")
+    void viewShare_DeniesEdit() throws Exception {
+        mockMvc.perform(post("/api/files/" + fileId + "/share")
+                .header("Authorization", "Bearer " + tokenOwner)
+                .contentType("application/json")
+                .content("{\"sharedWithUsername\":\"sharereceiver\",\"permission\":\"VIEW\"}"))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(put("/api/files/" + fileId)
+                        .header("Authorization", "Bearer " + tokenReceiver)
+                        .contentType("application/json")
+                        .content("{\"name\":\"changed.txt\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("EDIT share allows permitted file updates")
+    void editShare_AllowsRename() throws Exception {
+        mockMvc.perform(post("/api/files/" + fileId + "/share")
+                .header("Authorization", "Bearer " + tokenOwner)
+                .contentType("application/json")
+                .content("{\"sharedWithUsername\":\"sharereceiver\",\"permission\":\"EDIT\"}"))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(put("/api/files/" + fileId)
+                        .header("Authorization", "Bearer " + tokenReceiver)
+                        .contentType("application/json")
+                        .content("{\"name\":\"changed.txt\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("changed.txt"));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/files/{fileId}/share/{shareId} - revokes the share")
     void revokeShare_Success() throws Exception {
-        // Create share
-        String body = "{\"type\":\"PUBLIC\",\"permission\":\"VIEW\"}";
-        String shareResponse = mockMvc.perform(post("/api/files/" + fileId + "/shares")
+        String shareResponse = mockMvc.perform(post("/api/files/" + fileId + "/share")
                         .header("Authorization", "Bearer " + tokenOwner)
                         .contentType("application/json")
-                        .content(body))
+                        .content("{\"sharedWithUsername\":\"sharereceiver\",\"permission\":\"VIEW\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-
         Long shareId = objectMapper.readTree(shareResponse).get("id").asLong();
 
-        // Revoke share
-        mockMvc.perform(delete("/api/files/" + fileId + "/shares/" + shareId)
+        mockMvc.perform(delete("/api/files/" + fileId + "/share/" + shareId)
                         .header("Authorization", "Bearer " + tokenOwner))
                 .andExpect(status().isNoContent());
-
-        // Verify share list is empty
-        mockMvc.perform(get("/api/files/" + fileId + "/shares")
+        mockMvc.perform(get("/api/files/" + fileId + "/share")
                         .header("Authorization", "Bearer " + tokenOwner))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)));
+                .andExpect(jsonPath("$.content", hasSize(0)));
+        mockMvc.perform(get("/api/files/" + fileId)
+                        .header("Authorization", "Bearer " + tokenReceiver))
+                .andExpect(status().isNotFound());
     }
 }

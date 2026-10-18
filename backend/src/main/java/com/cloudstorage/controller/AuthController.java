@@ -6,6 +6,7 @@ import com.cloudstorage.dto.response.AuthResponse;
 import com.cloudstorage.dto.response.UserDto;
 import com.cloudstorage.security.JwtUtil;
 import com.cloudstorage.service.AuthService;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,44 +18,36 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
-
     private final AuthService authService;
     private final JwtUtil jwtUtil;
 
     @PostMapping("/register")
     public ResponseEntity<UserDto> register(@Valid @RequestBody RegisterRequest request) {
-        UserDto user = authService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        AuthResponse response = authService.login(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(authService.login(request));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
-            if (jwtUtil.validateToken(token)) {
-                Long userId = jwtUtil.getClaimsFromToken(token).get("userId", Long.class);
-                String username = jwtUtil.getClaimsFromToken(token).get("username", String.class);
-                
-                String newToken = jwtUtil.generateToken(userId, username);
-                
-                return ResponseEntity.ok(AuthResponse.builder()
-                        .token(newToken)
-                        .expiresIn(jwtUtil.getExpirationMs())
-                        .build());
-            }
+        if (header == null || !header.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        Claims claims = jwtUtil.getClaimsFromToken(header.substring(7).trim());
+        Number userId = claims.get("userId", Number.class);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(authService.refresh(userId.longValue()));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
+        // JWT logout is stateless by design; the client discards its token.
         return ResponseEntity.ok().build();
     }
 }
